@@ -3,48 +3,50 @@ package com.example.taskmanager.service.Implementations;
 import com.example.taskmanager.model.Task;
 import com.example.taskmanager.service.TaskService;
 import org.springframework.stereotype.Service;
+import com.example.taskmanager.repository.TaskRepository;
+import lombok.RequiredArgsConstructor;
 
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class TaskServiceImpl implements TaskService {
 
-    private final Map<Long, Task> tasks = new HashMap<>();
-    private long currentId = 1L;
+    private final TaskRepository taskRepository;
 
     @Override
     public Task createTask(Task task) {
-        task.setId(currentId++);
-        tasks.put(task.getId(), task);
-        return task;
+        return taskRepository.save(task);
     }
 
     @Override
     public List<Task> getUserTasks(Long userId) {
-    return tasks.values().stream()
-            .filter(task -> userId.equals(task.getUserId()))
-            .toList();
+    return taskRepository.findByUserId(userId);
 }
 
     @Override
     public List<Task> getPendingTasks(Long userId) {
-        return tasks.values().stream()
-                .filter(t -> t.getUserId().equals(userId) && !t.getIsDone() && !t.getIsDeleted())
+        return taskRepository.findByUserIdAndIsDoneFalse(userId).stream()
+                .filter(task -> !task.getIsDeleted())
                 .toList();
     }
 
     @Override
     public boolean deleteTask(Long taskId) {
-        Task task = tasks.get(taskId);
-        if (task != null && !task.getIsDeleted()) {
-            task.setIsDeleted(true);
-            return true;
+        Optional<Task> optionalTask = taskRepository.findById(taskId);
+        if (optionalTask.isPresent()) {
+            Task task = optionalTask.get();
+            if (!task.getIsDeleted()) {
+                task.setIsDeleted(true);
+                taskRepository.save(task);
+                return true;
+            }
         }
         return false;
     }
 
     @Override
     public Optional<Task> getTaskById(Long taskId) {
-        return Optional.ofNullable(tasks.get(taskId));
+        return taskRepository.findById(taskId);
     }
 }
