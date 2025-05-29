@@ -1,124 +1,111 @@
 package com.example.taskmanager.service.Implementations;
 
 import com.example.taskmanager.model.Task;
+import com.example.taskmanager.repository.TaskRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.*;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 class TaskServiceImplTest {
 
+    @Mock
+    private TaskRepository taskRepository;
+
+    @InjectMocks
     private TaskServiceImpl taskService;
 
     @BeforeEach
     void setUp() {
-        taskService = new TaskServiceImpl();
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
     void testCreateTask() {
-        Task task = new Task();
-        task.setUserId(1L);
-        task.setTitle("Test Task");
+        Task input = Task.builder().userId(1L).title("Test").build();
+        Task saved = Task.builder().id(1L).userId(1L).title("Test").build();
 
-        Task created = taskService.createTask(task);
+        when(taskRepository.save(input)).thenReturn(saved);
 
-        assertNotNull(created.getId());
-        assertEquals("Test Task", created.getTitle());
-        assertEquals(1L, created.getUserId());
+        Task result = taskService.createTask(input);
+        assertEquals(saved, result);
     }
 
     @Test
     void testGetUserTasks() {
-        Task task1 = new Task();
-        task1.setUserId(1L);
-        task1.setTitle("Task 1");
-        taskService.createTask(task1);
+        List<Task> tasks = List.of(Task.builder().userId(1L).title("T").build());
+        when(taskRepository.findByUserId(1L)).thenReturn(tasks);
 
-        Task task2 = new Task();
-        task2.setUserId(2L);
-        task2.setTitle("Task 2");
-        taskService.createTask(task2);
-
-        List<Task> userTasks = taskService.getUserTasks(1L);
-        assertEquals(1, userTasks.size());
-        assertEquals("Task 1", userTasks.get(0).getTitle());
+        List<Task> result = taskService.getUserTasks(1L);
+        assertEquals(1, result.size());
     }
 
     @Test
     void testGetPendingTasks() {
-        Task task1 = new Task();
-        task1.setUserId(1L);
-        task1.setTitle("Pending Task");
-        task1.setIsDone(false);
-        task1.setIsDeleted(false);
-        taskService.createTask(task1);
+        Task task1 = Task.builder()
+            .userId(1L)
+            .title("Pending Task")
+            .isDone(false)
+            .isDeleted(false)
+            .build();
 
-        Task task2 = new Task();
-        task2.setUserId(1L);
-        task2.setTitle("Done Task");
-        task2.setIsDone(true);
-        task2.setIsDeleted(false);
-        taskService.createTask(task2);
+        Task task2 = Task.builder()
+            .userId(1L)
+            .title("Deleted Task")
+            .isDone(false)
+            .isDeleted(true) // этот должен быть отфильтрован
+            .build();
 
-        Task task3 = new Task();
-        task3.setUserId(1L);
-        task3.setTitle("Deleted Task");
-        task3.setIsDone(false);
-        task3.setIsDeleted(true);
-        taskService.createTask(task3);
+        List<Task> tasks = List.of(task1, task2);
 
-        List<Task> pending = taskService.getPendingTasks(1L);
-        assertEquals(1, pending.size());
-        assertEquals("Pending Task", pending.get(0).getTitle());
+        when(taskRepository.findByUserIdAndIsDoneFalse(1L)).thenReturn(tasks);
+
+        List<Task> result = taskService.getPendingTasks(1L);
+
+        assertEquals(1, result.size());
+        assertEquals("Pending Task", result.get(0).getTitle());
     }
 
     @Test
-    void testDeleteTask() {
-        Task task = new Task();
-        task.setUserId(1L);
-        task.setIsDone(false);
-        task.setIsDeleted(false);
-        task = taskService.createTask(task);
+    void testDeleteTask_Success() {
+        Task task = Task.builder().id(1L).userId(1L).isDeleted(false).build();
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
 
-        boolean deleted = taskService.deleteTask(task.getId());
-        assertTrue(deleted);
-
-        Optional<Task> fetched = taskService.getTaskById(task.getId());
-        assertTrue(fetched.isPresent());
-        assertTrue(fetched.get().getIsDeleted());
+        boolean result = taskService.deleteTask(1L);
+        assertTrue(result);
+        assertTrue(task.getIsDeleted());
+        verify(taskRepository).save(task);
     }
 
     @Test
-    void testDeleteAlreadyDeletedTask() {
-        Task task = new Task();
-        task.setUserId(1L);
-        task.setIsDone(false);
-        task.setIsDeleted(true);
-        task = taskService.createTask(task);
+    void testDeleteTask_AlreadyDeleted() {
+        Task task = Task.builder().id(1L).userId(1L).isDeleted(true).build();
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
 
-        boolean deleted = taskService.deleteTask(task.getId());
-        assertFalse(deleted);
+        boolean result = taskService.deleteTask(1L);
+        assertFalse(result);
+        verify(taskRepository, never()).save(any());
     }
 
     @Test
     void testGetTaskById() {
-        Task task = new Task();
-        task.setUserId(1L);
-        task.setTitle("Lookup Task");
-        task = taskService.createTask(task);
+        Task task = Task.builder().id(1L).title("Found").build();
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
 
-        Optional<Task> found = taskService.getTaskById(task.getId());
-        assertTrue(found.isPresent());
-        assertEquals("Lookup Task", found.get().getTitle());
+        Optional<Task> result = taskService.getTaskById(1L);
+        assertTrue(result.isPresent());
+        assertEquals("Found", result.get().getTitle());
     }
 
     @Test
     void testGetTaskById_NotFound() {
-        Optional<Task> found = taskService.getTaskById(999L);
-        assertFalse(found.isPresent());
+        when(taskRepository.findById(999L)).thenReturn(Optional.empty());
+        Optional<Task> result = taskService.getTaskById(999L);
+        assertFalse(result.isPresent());
     }
 }
