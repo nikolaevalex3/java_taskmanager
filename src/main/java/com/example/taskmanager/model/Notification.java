@@ -2,6 +2,7 @@ package com.example.taskmanager.model;
 
 import lombok.*;
 import jakarta.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 
@@ -11,7 +12,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "notifications")
-public class Notification {
+public class Notification implements Serializable {
+    private static final long serialVersionUID = 1L;
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,9 +25,8 @@ public class Notification {
     @Column(nullable = false)
     private String message;
 
-    @Builder.Default
     @Column(nullable = false)
-    private LocalDateTime date = LocalDateTime.now();
+    private LocalDateTime date;
 
     @Builder.Default
     @Column(nullable = false)
