@@ -2,6 +2,7 @@ package com.example.taskmanager.model;
 
 import lombok.*;
 import jakarta.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
@@ -10,7 +11,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "tasks")
-public class Task {
+public class Task implements Serializable{
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,8 +26,7 @@ public class Task {
 
     private String description;
 
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     @Column(nullable = false)
     private LocalDateTime targetDate;
