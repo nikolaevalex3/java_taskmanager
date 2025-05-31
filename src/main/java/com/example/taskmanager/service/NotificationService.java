@@ -8,6 +8,8 @@ public interface NotificationService {
 
     Notification saveNotification(Notification notification);
 
+    void saveNotification(Long userId, String message);
+
     List<Notification> getAllNotificationsForUser(Long userId);
 
     List<Notification> getUnreadNotificationsForUser(Long userId);

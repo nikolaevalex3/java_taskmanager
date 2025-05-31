@@ -5,7 +5,9 @@ import com.example.taskmanager.repository.NotificationRepository;
 import com.example.taskmanager.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Async;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -37,4 +39,15 @@ public class NotificationServiceImpl implements NotificationService {
     public Notification saveNotification(Notification notification) {
     return notificationRepository.save(notification);
     }
+
+    @Async
+    public void saveNotification(Long userId, String message) {
+    Notification notification = Notification.builder()
+            .userId(userId)
+            .message(message)
+            .date(LocalDateTime.now())
+            .isRead(false)
+            .build();
+    saveNotification(notification);
+}
 }
