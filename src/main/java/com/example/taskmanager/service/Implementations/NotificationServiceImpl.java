@@ -15,11 +15,6 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
 
     @Override
-    public Notification createNotification(Notification notification) {
-        return notificationRepository.save(notification);
-    }
-
-    @Override
     public List<Notification> getAllNotificationsForUser(Long userId) {
         return notificationRepository.findByUserId(userId);
     }
@@ -37,5 +32,9 @@ public class NotificationServiceImpl implements NotificationService {
             notification.setIsRead(true);
             notificationRepository.save(notification);
         }
+    }
+
+    public Notification saveNotification(Notification notification) {
+    return notificationRepository.save(notification);
     }
 }

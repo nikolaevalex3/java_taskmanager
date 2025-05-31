@@ -1,5 +1,7 @@
 package com.example.taskmanager.service.Implementations;
 
+import com.example.taskmanager.event.TaskCreatedEvent;
+import com.example.taskmanager.kafka.KafkaProducerService;
 import com.example.taskmanager.model.Task;
 import com.example.taskmanager.service.TaskService;
 import com.example.taskmanager.repository.TaskRepository;
@@ -16,11 +18,22 @@ import java.util.Optional;
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
+    private final KafkaProducerService kafkaProducerService;
 
     @Override
     @CacheEvict(value = {"tasksById", "tasksByUser"}, key = "#task.id", allEntries = true)
     public Task createTask(Task task) {
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+
+        TaskCreatedEvent event = new TaskCreatedEvent(
+                savedTask.getUserId(),
+                "Новая задача: " + savedTask.getTitle(),
+                savedTask.getCreatedAt() != null ? savedTask.getCreatedAt() : savedTask.getTargetDate()
+        );
+
+        kafkaProducerService.sendTaskCreatedEvent(event);
+
+        return savedTask;
     }
 
     @Override
