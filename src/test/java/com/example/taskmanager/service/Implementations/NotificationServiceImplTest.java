@@ -25,7 +25,7 @@ class NotificationServiceImplTest {
                 .isRead(false)
                 .build();
 
-        Notification created = notificationService.createNotification(notification);
+        Notification created = notificationService.saveNotification(notification);
 
         assertNotNull(created);
         assertEquals(1L, created.getId());
@@ -41,14 +41,14 @@ class NotificationServiceImplTest {
                 .message("User 1 msg")
                 .isRead(false)
                 .build();
-        notificationService.createNotification(n1);
+        notificationService.saveNotification(n1);
 
         Notification n2 = Notification.builder()
                 .userId(2L)
                 .message("User 2 msg")
                 .isRead(false)
                 .build();
-        notificationService.createNotification(n2);
+        notificationService.saveNotification(n2);
 
         List<Notification> user1Notifications = notificationService.getAllNotificationsForUser(1L);
 
@@ -62,13 +62,13 @@ class NotificationServiceImplTest {
                 .userId(1L)
                 .isRead(false)
                 .build();
-        notificationService.createNotification(n1);
+        notificationService.saveNotification(n1);
 
         Notification n2 = Notification.builder()
                 .userId(1L)
                 .isRead(true)
                 .build();
-        notificationService.createNotification(n2);
+        notificationService.saveNotification(n2);
 
         List<Notification> unread = notificationService.getUnreadNotificationsForUser(1L);
 
@@ -83,7 +83,7 @@ class NotificationServiceImplTest {
                 .isRead(false)
                 .build();
 
-        Notification created = notificationService.createNotification(notification);
+        Notification created = notificationService.saveNotification(notification);
 
         notificationService.markAsRead(created.getId());
 

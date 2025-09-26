@@ -15,7 +15,7 @@ public class NotificationServiceImpl implements NotificationService {
     private long currentId = 1L;
 
     @Override
-    public Notification createNotification(Notification notification) {
+    public Notification saveNotification(Notification notification) {
         notification.setId(currentId++);
         notifications.put(notification.getId(), notification);
         return notification;

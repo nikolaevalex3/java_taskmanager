@@ -1,5 +1,7 @@
 package com.example.taskmanager.service.Implementations;
 
+import com.example.taskmanager.event.TaskCreatedEvent;
+import com.example.taskmanager.kafka.KafkaProducerService;
 import com.example.taskmanager.model.Task;
 import com.example.taskmanager.service.TaskService;
 import java.util.Map;

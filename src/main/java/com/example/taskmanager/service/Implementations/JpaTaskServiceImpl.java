@@ -1,16 +1,18 @@
 package com.example.taskmanager.service.Implementations;
 
+import com.example.taskmanager.event.TaskCreatedEvent;
+import com.example.taskmanager.kafka.KafkaProducerService;
 import com.example.taskmanager.model.Task;
 import com.example.taskmanager.service.TaskService;
-
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
 import com.example.taskmanager.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,18 +20,29 @@ import java.util.*;
 public class JpaTaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
+    private final KafkaProducerService kafkaProducerService;
 
     @Override
     @CacheEvict(value = {"tasksById", "tasksByUser"}, key = "#task.id", allEntries = true)
     public Task createTask(Task task) {
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+
+        TaskCreatedEvent event = new TaskCreatedEvent(
+                savedTask.getUserId(),
+                "Новая задача: " + savedTask.getTitle(),
+                savedTask.getCreatedAt() != null ? savedTask.getCreatedAt() : savedTask.getTargetDate()
+        );
+
+        kafkaProducerService.sendTaskCreatedEvent(event);
+
+        return savedTask;
     }
 
     @Override
     @Cacheable(value = "tasksByUser", key = "#userId")
     public List<Task> getUserTasks(Long userId) {
-    return taskRepository.findByUserId(userId);
-}
+        return taskRepository.findByUserId(userId);
+    }
 
     @Override
     @Cacheable(value = "pendingTasksByUser", key = "#userId")
