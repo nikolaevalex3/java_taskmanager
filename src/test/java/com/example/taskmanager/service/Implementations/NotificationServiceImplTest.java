@@ -1,79 +1,101 @@
 package com.example.taskmanager.service.Implementations;
 
 import com.example.taskmanager.model.Notification;
-import com.example.taskmanager.repository.NotificationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import java.util.*;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class NotificationServiceImplTest {
 
-    @Mock
-    private NotificationRepository notificationRepository;
-
-    @InjectMocks
     private NotificationServiceImpl notificationService;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        notificationService = new NotificationServiceImpl();
     }
 
     @Test
-    void testCreateNotification() {
-        Notification notification = Notification.builder().userId(1L).message("Hi").isRead(false).build();
-        Notification saved = Notification.builder().id(1L).userId(1L).message("Hi").isRead(false).build();
+    void testCreateNotification_ShouldAssignIdAndStoreNotification() {
+        Notification notification = Notification.builder()
+                .userId(1L)
+                .message("Test message")
+                .isRead(false)
+                .build();
 
-        when(notificationRepository.save(notification)).thenReturn(saved);
+        Notification created = notificationService.createNotification(notification);
 
-        Notification result = notificationService.createNotification(notification);
-        assertEquals(saved, result);
+        assertNotNull(created);
+        assertEquals(1L, created.getId());
+        assertEquals(1L, created.getUserId());
+        assertFalse(created.getIsRead());
+        assertEquals("Test message", created.getMessage());
     }
 
     @Test
-    void testGetAllNotificationsForUser() {
-        List<Notification> notifications = List.of(
-            Notification.builder().id(1L).userId(1L).message("A").isRead(false).build(),
-            Notification.builder().id(2L).userId(1L).message("B").isRead(true).build()
-        );
-        when(notificationRepository.findByUserId(1L)).thenReturn(notifications);
+    void testGetAllNotificationsForUser_ShouldReturnOnlyUsersNotifications() {
+        Notification n1 = Notification.builder()
+                .userId(1L)
+                .message("User 1 msg")
+                .isRead(false)
+                .build();
+        notificationService.createNotification(n1);
 
-        List<Notification> result = notificationService.getAllNotificationsForUser(1L);
-        assertEquals(2, result.size());
+        Notification n2 = Notification.builder()
+                .userId(2L)
+                .message("User 2 msg")
+                .isRead(false)
+                .build();
+        notificationService.createNotification(n2);
+
+        List<Notification> user1Notifications = notificationService.getAllNotificationsForUser(1L);
+
+        assertEquals(1, user1Notifications.size());
+        assertEquals(1L, user1Notifications.get(0).getUserId());
     }
 
     @Test
-    void testGetUnreadNotificationsForUser() {
-        List<Notification> unread = List.of(Notification.builder().id(3L).userId(1L).message("X").isRead(false).build());
-        when(notificationRepository.findByUserIdAndIsReadFalse(1L)).thenReturn(unread);
+    void testGetUnreadNotificationsForUser_ShouldReturnOnlyUnread() {
+        Notification n1 = Notification.builder()
+                .userId(1L)
+                .isRead(false)
+                .build();
+        notificationService.createNotification(n1);
 
-        List<Notification> result = notificationService.getUnreadNotificationsForUser(1L);
-        assertEquals(1, result.size());
-        assertFalse(result.get(0).getIsRead());
+        Notification n2 = Notification.builder()
+                .userId(1L)
+                .isRead(true)
+                .build();
+        notificationService.createNotification(n2);
+
+        List<Notification> unread = notificationService.getUnreadNotificationsForUser(1L);
+
+        assertEquals(1, unread.size());
+        assertFalse(unread.get(0).getIsRead());
     }
 
     @Test
-    void testMarkAsRead() {
-        Notification unread = Notification.builder()
-            .id(1L)
-            .userId(1L)
-            .message("Msg")
-            .isRead(false)
-            .build();
-        when(notificationRepository.findById(1L)).thenReturn(Optional.of(unread));
+    void testMarkAsRead_ShouldSetNotificationAsRead() {
+        Notification notification = Notification.builder()
+                .userId(1L)
+                .isRead(false)
+                .build();
 
-        notificationService.markAsRead(1L);
-        assertTrue(unread.getIsRead());
-        verify(notificationRepository).save(unread);
+        Notification created = notificationService.createNotification(notification);
+
+        notificationService.markAsRead(created.getId());
+
+        List<Notification> unread = notificationService.getUnreadNotificationsForUser(1L);
+        assertTrue(unread.isEmpty());
+
+        List<Notification> all = notificationService.getAllNotificationsForUser(1L);
+        assertTrue(all.get(0).getIsRead());
     }
 
     @Test
-    void testMarkAsRead_NotFound() {
-        when(notificationRepository.findById(999L)).thenReturn(Optional.empty());
-        notificationService.markAsRead(999L);  // should not throw
+    void testMarkAsRead_ShouldDoNothingIfNotificationNotFound() {
+        notificationService.markAsRead(999L);  
     }
 }
