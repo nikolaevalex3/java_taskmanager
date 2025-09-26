@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -63,4 +64,14 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Task> getTaskById(Long taskId) {
         return Optional.ofNullable(tasks.get(taskId));
     }
+
+    @Override
+    public List<Task> findOverdueTasks(LocalDateTime now) {
+    return tasks.values().stream()
+            .filter(t -> t.getTargetDate() != null)
+            .filter(t -> t.getTargetDate().isBefore(now))
+            .filter(t -> !t.getIsDone())
+            .filter(t -> !t.getIsDeleted())
+            .toList();
+    }        
 }

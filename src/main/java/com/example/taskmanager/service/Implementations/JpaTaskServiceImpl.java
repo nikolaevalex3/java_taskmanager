@@ -10,6 +10,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.Optional;
@@ -71,5 +72,10 @@ public class JpaTaskServiceImpl implements TaskService {
     @Cacheable(value = "tasksById", key = "#taskId")
     public Optional<Task> getTaskById(Long taskId) {
         return taskRepository.findById(taskId);
+    }
+
+    @Override
+    public List<Task> findOverdueTasks(LocalDateTime now) {
+        return taskRepository.findByTargetDateBeforeAndIsDoneFalseAndIsDeletedFalse(now);
     }
 }

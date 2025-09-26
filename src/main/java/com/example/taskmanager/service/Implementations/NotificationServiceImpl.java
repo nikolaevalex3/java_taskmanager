@@ -4,7 +4,9 @@ import com.example.taskmanager.model.Notification;
 import com.example.taskmanager.service.NotificationService;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Async;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -42,4 +44,16 @@ public class NotificationServiceImpl implements NotificationService {
             notification.setIsRead(true);
         }
     }
+
+
+    @Override
+    public void saveNotification(Long userId, String message) {
+    Notification notification = Notification.builder()
+            .userId(userId)
+            .message(message)
+            .date(LocalDateTime.now())
+            .isRead(false)
+            .build();
+            saveNotification(notification);
+}
 }
