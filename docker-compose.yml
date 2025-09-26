@@ -20,7 +20,7 @@ services:
     depends_on:
       - db
     environment:
-      - SPRING_PROFILES_ACTIVE=h2 
+      - SPRING_PROFILES_ACTIVE=postgres 
 
 volumes:
   pgdata:

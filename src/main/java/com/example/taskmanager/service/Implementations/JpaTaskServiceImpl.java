@@ -12,7 +12,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-@Profile("h2")
+@Profile({"h2", "postgres"})
 public class JpaTaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
