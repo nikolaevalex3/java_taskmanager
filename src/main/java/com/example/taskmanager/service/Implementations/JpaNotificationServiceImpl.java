@@ -1,52 +1,50 @@
 package com.example.taskmanager.service.Implementations;
 
 import com.example.taskmanager.model.Notification;
+import com.example.taskmanager.repository.NotificationRepository;
 import com.example.taskmanager.service.NotificationService;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.scheduling.annotation.Async;
+import lombok.RequiredArgsConstructor;
 
+import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+
+
 import java.util.*;
 
 @Service
-@Profile("inmemory")
-public class NotificationServiceImpl implements NotificationService {
+@RequiredArgsConstructor
+@Profile({"h2", "postgres"})
+public class JpaNotificationServiceImpl implements NotificationService {
 
-    private final Map<Long, Notification> notifications = new HashMap<>();
-    private long currentId = 1L;
-
-    @Override
-    public Notification saveNotification(Notification notification) {
-        notification.setId(currentId++);
-        notifications.put(notification.getId(), notification);
-        return notification;
-    }
+    private final NotificationRepository notificationRepository;
 
     @Override
     public List<Notification> getAllNotificationsForUser(Long userId) {
-        return notifications.values().stream()
-                .filter(n -> n.getUserId().equals(userId))
-                .toList();
+        return notificationRepository.findByUserId(userId);
     }
 
     @Override
     public List<Notification> getUnreadNotificationsForUser(Long userId) {
-        return notifications.values().stream()
-                .filter(n -> n.getUserId().equals(userId) && !n.getIsRead())
-                .toList();
+        return notificationRepository.findByUserIdAndIsReadFalse(userId);
     }
 
     @Override
     public void markAsRead(Long notificationId) {
-        Notification notification = notifications.get(notificationId);
-        if (notification != null) {
+        Optional<Notification> optional = notificationRepository.findById(notificationId);
+        if (optional.isPresent()) {
+            Notification notification = optional.get();
             notification.setIsRead(true);
+            notificationRepository.save(notification);
         }
     }
 
+    public Notification saveNotification(Notification notification) {
+    return notificationRepository.save(notification);
+    }
 
-    @Override
+        @Async
     public void saveNotification(Long userId, String message) {
     Notification notification = Notification.builder()
             .userId(userId)
@@ -54,6 +52,7 @@ public class NotificationServiceImpl implements NotificationService {
             .date(LocalDateTime.now())
             .isRead(false)
             .build();
-            saveNotification(notification);
-}
+    saveNotification(notification);
+    }
+    
 }
