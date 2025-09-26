@@ -23,9 +23,9 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=postgres 
 
-      SPRING_DATA_REDIS_HOST: redis 
-      SPRING_DATA_REDIS_PORT: 6379
-      SPRING_CACHE_TYPE: redis
+      - SPRING_DATA_REDIS_HOST=redis 
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_CACHE_TYPE=redis
 
   redis:
     image: redis:7-alpine 

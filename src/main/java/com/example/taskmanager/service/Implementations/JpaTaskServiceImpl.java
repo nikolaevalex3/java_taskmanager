@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import com.example.taskmanager.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.*;
 
@@ -18,16 +20,19 @@ public class JpaTaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
 
     @Override
+    @CacheEvict(value = {"tasksById", "tasksByUser"}, key = "#task.id", allEntries = true)
     public Task createTask(Task task) {
         return taskRepository.save(task);
     }
 
     @Override
+    @Cacheable(value = "tasksByUser", key = "#userId")
     public List<Task> getUserTasks(Long userId) {
     return taskRepository.findByUserId(userId);
 }
 
     @Override
+    @Cacheable(value = "pendingTasksByUser", key = "#userId")
     public List<Task> getPendingTasks(Long userId) {
         return taskRepository.findByUserIdAndIsDoneFalse(userId).stream()
                 .filter(task -> !task.getIsDeleted())
@@ -35,6 +40,7 @@ public class JpaTaskServiceImpl implements TaskService {
     }
 
     @Override
+    @CacheEvict(value = {"tasksById", "tasksByUser", "pendingTasksByUser"}, allEntries = true)
     public boolean deleteTask(Long taskId) {
         Optional<Task> optionalTask = taskRepository.findById(taskId);
         if (optionalTask.isPresent()) {
@@ -49,6 +55,7 @@ public class JpaTaskServiceImpl implements TaskService {
     }
 
     @Override
+    @Cacheable(value = "tasksById", key = "#taskId")
     public Optional<Task> getTaskById(Long taskId) {
         return taskRepository.findById(taskId);
     }

@@ -2,9 +2,13 @@ package com.example.taskmanager.service.Implementations;
 
 import com.example.taskmanager.model.Task;
 import com.example.taskmanager.service.TaskService;
+import java.util.Map;
+import java.util.HashMap;
+
 import org.springframework.stereotype.Service;
-import com.example.taskmanager.repository.TaskRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,8 +31,11 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Cacheable(value = "tasksByUser", key = "#userId")
     public List<Task> getUserTasks(Long userId) {
-    return taskRepository.findByUserId(userId);
-}
+    return tasks.values().stream()
+            .filter(task -> userId.equals(task.getUserId()))
+            .toList();
+    }
+
 
     @Override
     @Cacheable(value = "pendingTasksByUser", key = "#userId")
