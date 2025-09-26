@@ -2,11 +2,13 @@ package com.example.taskmanager.service.Implementations;
 
 import com.example.taskmanager.model.Notification;
 import com.example.taskmanager.service.NotificationService;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
+@Profile("inmemory")
 public class NotificationServiceImpl implements NotificationService {
 
     private final Map<Long, Notification> notifications = new HashMap<>();

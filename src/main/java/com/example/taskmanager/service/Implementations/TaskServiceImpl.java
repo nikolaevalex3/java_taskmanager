@@ -3,10 +3,13 @@ package com.example.taskmanager.service.Implementations;
 import com.example.taskmanager.model.Task;
 import com.example.taskmanager.service.TaskService;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Profile;
+
 
 import java.util.*;
 
 @Service
+@Profile("inmemory")
 public class TaskServiceImpl implements TaskService {
 
     private final Map<Long, Task> tasks = new HashMap<>();
