@@ -1,14 +1,26 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:15.0
+    restart: always
+    environment:
+      POSTGRES_DB: taskmanager_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
   app:
     build: .
     ports:
       - "8080:8080"
-    volumes:
-      - h2-data:/app/data
+    depends_on:
+      - db
     environment:
-      - SPRING_PROFILES_ACTIVE=h2 
+      - SPRING_PROFILES_ACTIVE=postgres 
 
 volumes:
-  h2-data:
+  pgdata:

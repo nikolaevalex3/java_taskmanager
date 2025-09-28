@@ -12,7 +12,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-@Profile("h2")
+@Profile({"h2", "postgres"})
 public class JpaUserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
